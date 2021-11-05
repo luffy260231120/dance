@@ -1,0 +1,7 @@
+serverid  = "1234"
+serverkey = "dTI7F7ydhnzLOs8XZJQMNqPK5dkkkRuP"
+aeskey    = "00038e2e051041748de9af28bb360363"
+
+[env]
+mode     = "prod"
+listen   = "0.0.0.0:1234"
