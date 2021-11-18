@@ -2,24 +2,37 @@ package itest
 
 import (
 	"dance/core"
+	"dance/model"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"reflect"
 )
 
-func handleSetContactInfo(c *core.Context, client *http.Client) {
+type argsTest struct {
+	model.UserAuthWithoutToken
+}
+
+func handleTest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"aa": "bb"})
 }
 
+func handleTest2(c *gin.Context) {
+	var (
+		args = c.Keys["args"].(*argsTest)
+	)
+	c.JSON(http.StatusOK, gin.H{"user_id": args.UserID})
+}
+
 func init() {
-	core.Engine.GET("test", func(context *gin.Context) {
-		//name := context.Param("name")
-		//action := context.Param("action")
+	core.Engine.GET("/dance/test", handleTest)
 
-		//fmt.Println(action)
-		////  截取/
-		////action = strings.Trim(action, "/")
-		//context.String(http.StatusOK, name+" is "+action)
-
-		context.JSON(http.StatusOK, gin.H{"aa": "bb"})
-	})
+	checks := []core.FunCheck{core.CheckV2SignMD5}
+	finish := []core.FunHandle{}
+	core.Engine.POST(
+		"/dance/test2",
+		core.HandlePost(
+			reflect.TypeOf(argsTest{}),
+			handleTest2, checks, finish,
+		),
+	)
 }
