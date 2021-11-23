@@ -20,12 +20,16 @@ type FunTMESvc func(*Context, *http.Client)
 
 type Context struct {
 	*gin.Context
-	Result gin.H
-	Code   int
+	Result   gin.H
+	HttpCode int
+	Code     int
+	Msg      string
 }
 
-func (c *Context) JSON(code int, result gin.H) {
+func (c *Context) JSON(httpCode, code int, msg string, result gin.H) {
+	c.HttpCode = httpCode
 	c.Code = code
+	c.Msg = msg
 	c.Result = result
 }
 
@@ -35,19 +39,20 @@ func replyJSONAndLog(c *Context) {
 		"path":   c.Request.URL.Path,
 		"query":  c.Request.URL.RawQuery,
 	}
-	if args, ok := c.Keys["args"]; ok {
-		para := reflect.Indirect(reflect.ValueOf(args))
-		if para.FieldByName("UserID").IsValid() {
-			f["userid"] = para.FieldByName("UserID").Interface()
-		}
-	}
+	//if args, ok := c.Keys["args"]; ok {
+	//	para := reflect.Indirect(reflect.ValueOf(args))
+	//	if para.FieldByName("UserID").IsValid() {
+	//		f["userid"] = para.FieldByName("UserID").Interface()
+	//	}
+	//}
 	body, _ := c.Get(gin.BodyBytesKey)
 	if body != nil {
 		f["body"] = string(body.([]byte))
 	} else {
 		f["body"] = nil
 	}
-	f["code"] = c.Code
+	f["Code"] = c.Code
+	f["code_msg"] = c.Msg
 	if c.Result != nil {
 		dats, _ := json.Marshal(c.Result)
 		if len(dats) > 4096 {
@@ -55,8 +60,6 @@ func replyJSONAndLog(c *Context) {
 		} else {
 			f["result"] = string(dats)
 		}
-	} else {
-		f["result"] = nil
 	}
 	log2.MainLog.WithFields(f).Info("request")
 }
@@ -86,13 +89,14 @@ func HandlePost(typ reflect.Type, handle FunHandle, checks []FunCheck, finish []
 		if errs == nil {
 			c.Set("args", args)
 		} else {
-			log2.MainLog.Errorf("get args failed.err:%v", err.Error())
+			log2.MainLog.Errorf("get args failed.err:%v", errs.Error())
 			return
 		}
 		defer replyJSONAndLog(&ctx)
 
 		for _, cb := range checks {
 			if !cb(&ctx) {
+				c.JSON(ctx.HttpCode, gin.H{"code": ctx.Code, "msg": ctx.Msg, "data": ctx.Result})
 				return
 			}
 		}
@@ -100,7 +104,7 @@ func HandlePost(typ reflect.Type, handle FunHandle, checks []FunCheck, finish []
 		for _, cb := range finish {
 			cb(&ctx)
 		}
-		c.JSON(ctx.Code, ctx.Result)
+		c.JSON(ctx.HttpCode, gin.H{"code": ctx.Code, "msg": ctx.Msg, "data": ctx.Result})
 	}
 }
 

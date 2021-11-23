@@ -1,5 +1,5 @@
 listen   = "0.0.0.0:1234"
-database = "hwdev:hwdev@tcp(10.17.4.158:3306)/commercial?timeout=1s&readTimeout=1s&writeTimeout=1s"
+database = "root:315040@tcp(127.0.0.1:3306)/test_dance?timeout=1s&readTimeout=1s&writeTimeout=1s"
 redis    = "10.17.4.158:6379"
 redisPassword = "hwkugou"
 skipsigncheck = 1

@@ -14,7 +14,7 @@ const (
 	pKey = "123"
 )
 
-func CheckV2SignMD5(c *Context) bool {
+func CheckSignMD5(c *Context) bool {
 	if conf.Config.SkipSignCheck == 1 {
 		return true
 	}
@@ -27,8 +27,17 @@ func CheckV2SignMD5(c *Context) bool {
 	calsign := fmt.Sprintf("%X", md5cal.Sum(nil))
 	reqsign := c.GetHeader("signature")
 	if strings.ToUpper(reqsign) != calsign {
-		c.JSON(http.StatusOK, gin.H{"error_code": cons.ERR_PUB_PARAMS, "error_msg": "invalid signature"})
+		c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "签名错误", nil)
 		return false
 	}
+	return true
+}
+
+func CheckManager(c *Context) bool {
+	//reqsign := c.GetHeader("signature")
+	//if strings.ToUpper(reqsign) != calsign {
+	//	c.JSON(http.StatusOK, gin.H{"error_code": cons.ERR_PUB_PARAMS, "error_msg": "invalid signature"})
+	//	return false
+	//}
 	return true
 }

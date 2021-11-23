@@ -20,13 +20,13 @@ func handleTest2(c *core.Context) {
 	var (
 		args = c.Keys["args"].(*argsTest)
 	)
-	c.JSON(http.StatusOK, gin.H{"user_id": args.UserID})
+	c.JSON(http.StatusOK, 0, "", gin.H{"user_id": args.UserID})
 }
 
 func init() {
 	core.Engine.GET("/dance/test", handleTest)
 
-	checks := []core.FunCheck{core.CheckV2SignMD5}
+	checks := []core.FunCheck{core.CheckSignMD5}
 	finish := []core.FunHandle{}
 	core.Engine.POST(
 		"/dance/test2",
