@@ -1,8 +1,10 @@
 package conf
 
 import (
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
 	"os"
+	"time"
 )
 
 // logrus提供了New()函数来创建一个logrus的实例。
@@ -15,11 +17,16 @@ func InitLog() {
 	if Dev == DevTest {
 		MainLog.Out = os.Stdout
 	} else {
-		file, err := os.OpenFile("debug.log", os.O_CREATE|os.O_WRONLY, 0666)
-		if err == nil {
-			MainLog.Out = file
-		} else {
-			MainLog.Info("Failed to log to file")
-		}
+		path := "./logs/log"
+		LogMaxAge := 24 * 60 //hour
+		LogRotatTm := 60     //min
+		writer, _ := rotatelogs.New(
+			//path+".%Y%m%d%H%M",
+			path+".%Y%m%d%H",
+			rotatelogs.WithLinkName(path),
+			rotatelogs.WithMaxAge(time.Duration(LogMaxAge)*time.Hour),
+			rotatelogs.WithRotationTime(time.Duration(LogRotatTm)*time.Minute),
+		)
+		MainLog.SetOutput(writer)
 	}
 }
