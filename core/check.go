@@ -14,7 +14,7 @@ const (
 	pKey = "123"
 )
 
-func CheckV2SignMD5(c *gin.Context) bool {
+func CheckV2SignMD5(c *Context) bool {
 	if conf.Config.SkipSignCheck == 1 {
 		return true
 	}

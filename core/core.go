@@ -3,6 +3,7 @@ package core
 import (
 	log2 "dance/conf"
 	"encoding/hex"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/google/uuid"
@@ -13,11 +14,22 @@ import (
 	"strings"
 )
 
-type FunCheck func(c *gin.Context) bool
-type FunHandle func(*gin.Context)
-type FunTMESvc func(*gin.Context, *http.Client)
+type FunCheck func(c *Context) bool
+type FunHandle func(*Context)
+type FunTMESvc func(*Context, *http.Client)
 
-func replyJSONAndLog(c *gin.Context) {
+type Context struct {
+	*gin.Context
+	Result gin.H
+	Code   int
+}
+
+func (c *Context) JSON(code int, result gin.H) {
+	c.Code = code
+	c.Result = result
+}
+
+func replyJSONAndLog(c *Context) {
 	f := log.Fields{
 		"method": c.Request.Method,
 		"path":   c.Request.URL.Path,
@@ -34,6 +46,17 @@ func replyJSONAndLog(c *gin.Context) {
 		f["body"] = string(body.([]byte))
 	} else {
 		f["body"] = nil
+	}
+	f["code"] = c.Code
+	if c.Result != nil {
+		dats, _ := json.Marshal(c.Result)
+		if len(dats) > 4096 {
+			f["result"] = string(dats[:4096])
+		} else {
+			f["result"] = string(dats)
+		}
+	} else {
+		f["result"] = nil
 	}
 	log2.MainLog.WithFields(f).Info("request")
 }
@@ -52,7 +75,8 @@ func HandlePost(typ reflect.Type, handle FunHandle, checks []FunCheck, finish []
 		} else {
 			sign = strings.ToLower(sign)
 		}
-		c.Set("ctx", c)
+		ctx := Context{Context: c}
+		c.Set("ctx", &ctx)
 		c.Set("type", typ)
 		c.Set(gin.BodyBytesKey, body)
 		typs := c.Keys["type"].(reflect.Type)
@@ -65,17 +89,18 @@ func HandlePost(typ reflect.Type, handle FunHandle, checks []FunCheck, finish []
 			log2.MainLog.Errorf("get args failed.err:%v", err.Error())
 			return
 		}
-		defer replyJSONAndLog(c)
+		defer replyJSONAndLog(&ctx)
 
 		for _, cb := range checks {
-			if !cb(c) {
+			if !cb(&ctx) {
 				return
 			}
 		}
-		handle(c)
+		handle(&ctx)
 		for _, cb := range finish {
-			cb(c)
+			cb(&ctx)
 		}
+		c.JSON(ctx.Code, ctx.Result)
 	}
 }
 

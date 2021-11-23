@@ -16,7 +16,7 @@ func handleTest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"aa": "bb"})
 }
 
-func handleTest2(c *gin.Context) {
+func handleTest2(c *core.Context) {
 	var (
 		args = c.Keys["args"].(*argsTest)
 	)
