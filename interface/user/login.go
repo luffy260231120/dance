@@ -44,7 +44,7 @@ func checkPassword(c *core.Context) bool {
 	if args.Password == Password {
 		return true
 	}
-	c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "密码错误", nil)
+	c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "登录失败 密码错误", nil)
 	return false
 }
 
@@ -52,7 +52,7 @@ func init() {
 	checks := []core.FunCheck{core.CheckSignMD5, checkPassword}
 	finish := []core.FunHandle{}
 	core.Engine.POST(
-		"/user/login",
+		"/dance/user/login",
 		core.HandlePost(
 			reflect.TypeOf(argsLogin{}),
 			handleLogin, checks, finish,
