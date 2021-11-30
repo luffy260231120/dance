@@ -2,16 +2,12 @@ package core
 
 import (
 	log2 "dance/conf"
-	"encoding/hex"
+	"dance/cons"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
 	"net/http"
 	"reflect"
-	"strings"
 )
 
 type FunCheck func(c *Context) bool
@@ -33,28 +29,34 @@ func (c *Context) JSON(httpCode, code int, msg string, result gin.H) {
 	c.Result = result
 }
 
-func replyJSONAndLog(c *Context) {
-	f := log.Fields{
-		"method": c.Request.Method,
-		"path":   c.Request.URL.Path,
-		"query":  c.Request.URL.RawQuery,
-	}
+func replyJSONAndLog(ctx *Context) {
+	var (
+		f = log.Fields{
+			"method": ctx.Request.Method,
+			"path":   ctx.Request.URL.Path,
+			"query":  ctx.Request.URL.RawQuery,
+		}
+		c      = ctx.Context
+		result = gin.H{"code": ctx.Code, "msg": ctx.Msg}
+	)
+
 	//if args, ok := c.Keys["args"]; ok {
 	//	para := reflect.Indirect(reflect.ValueOf(args))
 	//	if para.FieldByName("UserID").IsValid() {
 	//		f["userid"] = para.FieldByName("UserID").Interface()
 	//	}
 	//}
-	body, _ := c.Get(gin.BodyBytesKey)
+	body, _ := ctx.Get(gin.BodyBytesKey)
 	if body != nil {
 		f["body"] = string(body.([]byte))
 	} else {
 		f["body"] = nil
 	}
-	f["Code"] = c.Code
-	f["code_msg"] = c.Msg
-	if c.Result != nil {
-		dats, _ := json.Marshal(c.Result)
+	f["code"] = ctx.Code
+	f["code_msg"] = ctx.Msg
+	if ctx.Result != nil {
+		result["data"] = ctx.Result
+		dats, _ := json.Marshal(ctx.Result)
 		if len(dats) > 4096 {
 			f["result"] = string(dats[:4096])
 		} else {
@@ -62,37 +64,29 @@ func replyJSONAndLog(c *Context) {
 		}
 	}
 	log2.MainLog.WithFields(f).Info("request")
+	c.JSON(ctx.HttpCode, result)
 }
 
 func HandlePost(typ reflect.Type, handle FunHandle, checks []FunCheck, finish []FunHandle) func(*gin.Context) {
 	return func(c *gin.Context) {
-		sign := c.GetHeader("signature")
-		body, err := ioutil.ReadAll(c.Request.Body)
-		if err != nil {
-			log2.MainLog.Errorf("handle post err:%v", err.Error())
-			return
-		}
-		if sign == "" {
-			temp := uuid.New()
-			sign = strings.ToLower(hex.EncodeToString(temp[:]))
-		} else {
-			sign = strings.ToLower(sign)
-		}
+		//sign := c.GetHeader("sign")
+
+		//if sign == "" {
+		//	temp := uuid.New()
+		//	sign = strings.ToLower(hex.EncodeToString(temp[:]))
+		//} else {
+		//	sign = strings.ToLower(sign)
+		//}
 		ctx := Context{Context: c}
+		//c.Set("sign", sign)
 		c.Set("ctx", &ctx)
 		c.Set("type", typ)
-		c.Set(gin.BodyBytesKey, body)
-		typs := c.Keys["type"].(reflect.Type)
-		argv := reflect.New(typs)
-		args := argv.Interface()
-		errs := c.ShouldBindBodyWith(args, binding.JSON)
-		if errs == nil {
-			c.Set("args", args)
-		} else {
-			log2.MainLog.Errorf("get args failed.err:%v", errs.Error())
+
+		defer replyJSONAndLog(&ctx)
+		if msg := CheckArgsQueryBody(&ctx); msg != "" {
+			ctx.JSON(ctx.HttpCode, cons.ERR_PUB_PARAMS, msg, nil)
 			return
 		}
-		defer replyJSONAndLog(&ctx)
 
 		for _, cb := range checks {
 			if !cb(&ctx) {
@@ -104,7 +98,6 @@ func HandlePost(typ reflect.Type, handle FunHandle, checks []FunCheck, finish []
 		for _, cb := range finish {
 			cb(&ctx)
 		}
-		c.JSON(ctx.HttpCode, gin.H{"code": ctx.Code, "msg": ctx.Msg, "data": ctx.Result})
 	}
 }
 

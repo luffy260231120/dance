@@ -3,6 +3,7 @@ package main
 import (
 	"dance/conf"
 	"dance/core"
+	_ "dance/interface/course"
 	_ "dance/interface/itest"
 	_ "dance/interface/user"
 	"fmt"

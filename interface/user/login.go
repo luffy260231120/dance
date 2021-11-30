@@ -6,6 +6,7 @@ import (
 	"dance/core"
 	"dance/model"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"net/http"
 	"reflect"
 )
@@ -23,16 +24,20 @@ func handleLogin(c *core.Context) {
 		user = &model.UserInfo{}
 	)
 
-	if err := core.GetDB().Table("user").First(user).Error; err != nil {
-		conf.MainLog.Errorf("failed to get user %s. err:%v", args.Phone, err.Error())
+	if err := core.GetDB().Table("user").Where("user_id=?", args.Phone).First(user).Error; err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "登录失败 查无此号", nil)
+			return
+		}
+		conf.MainLog.Errorf("登录未知错误,err:%v", err.Error())
 		return
 	}
 
 	c.JSON(http.StatusOK, 0, "", gin.H{
-		"user_id": user.UserId,
-		"token":   user.Token,
-		"name":    user.Name,
-		"sex":     user.Sex,
+		"userId": user.UserId,
+		"token":  user.Token,
+		"name":   user.Name,
+		"sex":    user.Sex,
 	})
 }
 
