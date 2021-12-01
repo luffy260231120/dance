@@ -2,31 +2,51 @@ package course
 
 import (
 	"dance/core"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"net/http"
 	"reflect"
+	"time"
 )
 
-type argsDays struct {
-	Phone    string `form:"phone" binding:"required"`
-	Password string `form:"password" binding:"required"`
+const (
+	MaxDays = 7
+)
+
+func handleDays(c *core.Context) {
+
+	var (
+		days = []gin.H{}
+	)
+	for offset := 0; offset < MaxDays; offset++ {
+		t := time.Now().AddDate(0, 0, offset)
+		days = append(days, gin.H{
+			"desc":   getDayDesc(t),
+			"offset": offset,
+		})
+	}
+	c.JSON(http.StatusOK, 0, "", gin.H{"days": days})
 }
 
-func handleRegister(c *core.Context) {
-
-	//user := model.UserInfo{
-	//	UserId:     args.Phone,
-	//	Token:      "", // TODO
-	//	Name:       args.Name,
-	//	Sex:        args.Sex,
-	//	Bk:         args.Bk,
-	//	CreateTime: now,
-	//	UpdateTime: now,
-	//}
-	//if err := core.GetDB().Table("user").Create(&user).Error; err != nil {
-	//	conf.MainLog.Errorf("register %v failed. err:%v", args.Phone, err.Error())
-	//	c.JSON(http.StatusOK, cons.ERR_PUB_SYSTEM, "注册用户出错", nil)
-	//	return
-	//}
-	//c.JSON(http.StatusOK, 0, "", gin.H{"user_id": args.Phone})
+func getDayDesc(t time.Time) string {
+	week := ""
+	switch t.Weekday() {
+	case 1:
+		week = "周一"
+	case 2:
+		week = "周二"
+	case 3:
+		week = "周三"
+	case 4:
+		week = "周四"
+	case 5:
+		week = "周五"
+	case 6:
+		week = "周六"
+	case 0:
+		week = "周日"
+	}
+	return fmt.Sprintf("%s %d.%d", week, t.Month(), t.Day())
 }
 
 func init() {
@@ -34,9 +54,9 @@ func init() {
 	finish := []core.FunHandle{}
 	core.Engine.GET(
 		"/dance/course/days",
-		core.HandlePost(
-			reflect.TypeOf(argsDays{}),
-			handleRegister, checks, finish,
+		core.HandleRequest(
+			reflect.TypeOf(core.ArgsDefault{}),
+			handleDays, checks, finish,
 		),
 	)
 }

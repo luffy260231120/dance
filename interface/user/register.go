@@ -45,7 +45,7 @@ func init() {
 	finish := []core.FunHandle{}
 	core.Engine.POST(
 		"/dance/user/register",
-		core.HandlePost(
+		core.HandleRequest(
 			reflect.TypeOf(argsRegister{}),
 			handleRegister, checks, finish,
 		),

@@ -30,7 +30,7 @@ func init() {
 	finish := []core.FunHandle{}
 	core.Engine.POST(
 		"/dance/test2",
-		core.HandlePost(
+		core.HandleRequest(
 			reflect.TypeOf(argsTest{}),
 			handleTest2, checks, finish,
 		),

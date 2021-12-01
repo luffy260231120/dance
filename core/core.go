@@ -67,7 +67,9 @@ func replyJSONAndLog(ctx *Context) {
 	c.JSON(ctx.HttpCode, result)
 }
 
-func HandlePost(typ reflect.Type, handle FunHandle, checks []FunCheck, finish []FunHandle) func(*gin.Context) {
+type ArgsDefault struct{}
+
+func HandleRequest(typ reflect.Type, handle FunHandle, checks []FunCheck, finish []FunHandle) func(*gin.Context) {
 	return func(c *gin.Context) {
 		//sign := c.GetHeader("sign")
 
