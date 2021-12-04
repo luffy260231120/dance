@@ -12,11 +12,10 @@ import (
 )
 
 type argsRegister struct {
-	Phone  string `json:"phone" binding:"required,max=11"`
-	Name   string `json:"name" binding:"required,max=64"`
-	Sex    int    `json:"sex" binding:"required,enum=1-2"`
-	Avatar string `json:"avatar"`
-	Bk     string `json:"bk"`
+	Phone string `json:"phone" binding:"required,max=11"`
+	Name  string `json:"name" binding:"required,max=64"`
+	Sex   int    `json:"sex" binding:"required,enum=1-2"`
+	Bk    string `json:"bk"`
 }
 
 func handleRegister(c *core.Context) {
@@ -25,12 +24,11 @@ func handleRegister(c *core.Context) {
 		now  = time.Now().Format(cons.FORMAT_TIME)
 	)
 	user := model.UserInfo{
-		UserId: args.Phone,
-		Token:  "", // TODO
-		Name:   args.Name,
-		Sex:    args.Sex,
-		Bk:     args.Bk,
-
+		UserId:     args.Phone,
+		Token:      "", // TODO
+		Name:       args.Name,
+		Sex:        args.Sex,
+		Bk:         args.Bk,
 		CreateTime: now,
 		UpdateTime: now,
 	}
@@ -46,7 +44,7 @@ func init() {
 	checks := []core.FunCheck{}
 	finish := []core.FunHandle{}
 	core.Engine.POST(
-		"/dance/user/register",
+		"/dance/teacher/add",
 		core.HandleRequest(
 			reflect.TypeOf(argsRegister{}),
 			handleRegister, checks, finish,

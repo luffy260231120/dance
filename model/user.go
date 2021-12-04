@@ -7,6 +7,7 @@ type UserInfo struct {
 	Name       string `gorm:"column:name" json:"name"`
 	Sex        int    `gorm:"column:sex" json:"sex"` // 1-女 2-男
 	Bk         string `gorm:"column:bk" json:"bk"`
+	Avatar     string `gorm:"column:avatar" json:"avatar"`
 	CreateTime string `gorm:"column:create_time" json:"create_time"`
 	UpdateTime string `gorm:"column:update_time" json:"update_time"`
 }

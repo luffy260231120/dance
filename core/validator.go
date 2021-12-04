@@ -5,6 +5,7 @@
 package core
 
 import (
+	"dance/cons"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -32,10 +33,10 @@ func validEnum(v validator.FieldLevel) bool {
 	return false
 }
 
-func validTimestamp(v validator.FieldLevel) bool {
-	tims := v.Field().Int()
-	nows := time.Now().Unix()
-	if nows-tims >= 24*3600 || tims-nows >= 24*3600 {
+func validTime(v validator.FieldLevel) bool {
+	timeStr := v.Field().String()
+	_, err := time.ParseInLocation(cons.FORMAT_TIME, timeStr, time.Local)
+	if err != nil {
 		return false
 	}
 	return true
@@ -52,6 +53,6 @@ func validAlphaNull(v validator.FieldLevel) bool {
 func init() {
 	v := binding.Validator.Engine().(*validator.Validate)
 	v.RegisterValidation("enum", validEnum)
-	v.RegisterValidation("timestamp", validTimestamp)
+	v.RegisterValidation("time", validTime)
 	v.RegisterValidation("alphanull", validAlphaNull)
 }

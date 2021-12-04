@@ -1,12 +1,12 @@
 package model
 
 type UserAuth struct {
-	UserID string `json:"user_id" binding:"required,max=128"`
+	UserID int    `json:"user_id" binding:"required,max=128"`
 	Token  string `json:"token" binding:"required,max=256"`
 }
 
 type UserAuthWithoutToken struct {
-	UserID string `json:"user_id" binding:"required,max=128"`
+	UserID int    `json:"user_id" binding:"required,max=128"`
 	Token  string `json:"token"`
 }
 
