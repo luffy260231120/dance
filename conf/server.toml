@@ -1,0 +1,4 @@
+listen   = "0.0.0.0:2508"
+database = "hwdev:hwdev@tcp(10.17.4.158:3306)/commercial?timeout=1s&readTimeout=1s&writeTimeout=1s"
+redis    = "10.17.4.158:6379"
+redisPassword = "hwkugou"
