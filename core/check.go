@@ -19,76 +19,10 @@ import (
 )
 
 const (
-	pKey = "123"
+	pKey      = "123"
+	Anonymous = "anonymous"
+	Password  = "password"
 )
-
-//func CheckArgsQuery(c *Context) bool {
-//	var (
-//		typs = c.Keys["type"].(reflect.Type)
-//		argv = reflect.New(typs)
-//		args = argv.Interface()
-//	)
-//	if err := patch.MapUri(args, c.Request.URL.Query()); err != nil {
-//		conf.MainLog.Warnf(err.Error())
-//		c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "invalid query", nil)
-//		return false
-//	}
-//	errs := binding.Validator.ValidateStruct(args)
-//	if errs == nil {
-//		c.Set("args", args)
-//		return true
-//	}
-//	etip := ""
-//	tips := []string{}
-//	switch errs.(type) {
-//	case validator.ValidationErrors:
-//		verr := errs.(validator.ValidationErrors)
-//		for _, f := range verr {
-//			tip := fmt.Sprintf("field:%s,rule:%s", strings.ToLower(f.Field()), f.Tag())
-//			tips = append(tips, tip)
-//		}
-//	}
-//	//c.Debugf("%T, %v\n", errs, errs)
-//	if len(tips) == 0 {
-//		etip = "invalid query format"
-//	} else {
-//		etip = strings.Join(tips, "|")
-//	}
-//	c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, etip, nil)
-//	return false
-//}
-
-func CheckArgsBody(c *Context) string {
-	typs := c.Keys["type"].(reflect.Type)
-	argv := reflect.New(typs)
-	args := argv.Interface()
-	errs := c.ShouldBindBodyWith(args, binding.JSON)
-	if errs == nil {
-		c.Set("args", args)
-		return ""
-	}
-	etip := ""
-	tips := []string{}
-	switch errs.(type) {
-	case validator.ValidationErrors:
-		verr := errs.(validator.ValidationErrors)
-		for _, f := range verr {
-			tip := fmt.Sprintf("field:%s,rule:%s", strings.ToLower(f.Field()), f.Tag())
-			tips = append(tips, tip)
-		}
-	case *json.UnmarshalTypeError:
-		verr := errs.(*json.UnmarshalTypeError)
-		tip := fmt.Sprintf("field:%s,rule:type", strings.ToLower(verr.Field))
-		tips = append(tips, tip)
-	}
-	//c.Debugf("%T, %v\n", errs, errs)
-	if len(tips) == 0 {
-		etip = "invalid json format"
-	} else {
-		etip = strings.Join(tips, "|")
-	}
-	return etip
-}
 
 func CheckArgsQueryBody(c *Context) string {
 	var (
@@ -166,5 +100,37 @@ func CheckManager(c *Context) bool {
 	//	c.JSON(http.StatusOK, gin.H{"error_code": cons.ERR_PUB_PARAMS, "error_msg": "invalid signature"})
 	//	return false
 	//}
+	return true
+}
+
+// 免登陆
+func CheckVisitAuth(c *Context) bool {
+	var (
+		args   = reflect.Indirect(reflect.ValueOf(c.Keys["args"]))
+		userid = args.FieldByName("UserID").String()
+		token  = args.FieldByName("Token").String()
+	)
+	if userid != Anonymous || token != Password {
+		return true
+	}
+	args.FieldByName("UserID").SetString("")
+	args.FieldByName("Token").SetString("")
+	c.SkipAuth = true
+	return true
+}
+
+func CheckUserId(c *Context) bool {
+	if c.SkipAuth {
+		return true
+	}
+	// TODO
+	return true
+}
+
+func CheckToken(c *Context) bool {
+	if c.SkipAuth {
+		return true
+	}
+	// TODO
 	return true
 }

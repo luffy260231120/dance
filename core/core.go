@@ -16,6 +16,7 @@ type FunTMESvc func(*Context, *http.Client)
 
 type Context struct {
 	*gin.Context
+	SkipAuth bool //是否开启匿名调用api
 	Result   gin.H
 	HttpCode int
 	Code     int

@@ -6,38 +6,41 @@ import (
 	"dance/core"
 	"dance/model"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"net/http"
 	"reflect"
 	"time"
 )
 
 type argsRegister struct {
-	Phone string `json:"phone" binding:"required,max=11"`
-	Name  string `json:"name" binding:"required,max=64"`
-	Sex   int    `json:"sex" binding:"required,enum=1-2"`
-	Bk    string `json:"bk"`
+	Phone  string `json:"phone" binding:"required,max=11"`
+	Name   string `json:"name" binding:"required,max=64"`
+	Sex    int    `json:"sex" binding:"required,enum=1-2"`
+	Type   int    `json:"type" binding:"required,enum=1-2"`
+	Status int    `json:"status" binding:"required,enum=1-2"`
+	Bk     string `json:"bk"`
+	Avatar string `json:"avatar"`
 }
 
 func handleRegister(c *core.Context) {
 	var (
-		args = c.Keys["args"].(*argsRegister)
-		now  = time.Now().Format(cons.FORMAT_TIME)
+		args    = c.Keys["args"].(*argsRegister)
+		now     = time.Now().Format(cons.FORMAT_TIME)
+		teacher = &model.TeacherInfo{}
 	)
-	user := model.UserInfo{
-		UserId:     args.Phone,
-		Token:      "", // TODO
-		Name:       args.Name,
-		Sex:        args.Sex,
-		Bk:         args.Bk,
-		CreateTime: now,
-		UpdateTime: now,
-	}
-	if err := core.GetDB().Table("user").Create(&user).Error; err != nil {
+
+	copier.Copy(teacher, args)
+	teacher.TeacherId = args.Phone
+	teacher.Token = "" // TODO
+	teacher.UpdateTime = now
+	teacher.CreateTime = now
+
+	if err := core.GetDB().Table("teacher").Create(&teacher).Error; err != nil {
 		conf.MainLog.Errorf("register %v failed. err:%v", args.Phone, err.Error())
 		c.JSON(http.StatusOK, cons.ERR_PUB_SYSTEM, "注册用户出错", nil)
 		return
 	}
-	c.JSON(http.StatusOK, 0, "", gin.H{"user_id": args.Phone})
+	c.JSON(http.StatusOK, 0, "", gin.H{"teacher_id": args.Phone})
 }
 
 func init() {

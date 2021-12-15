@@ -1,23 +1,29 @@
 package course
 
 import (
+	"dance/cons"
 	"dance/core"
+	"dance/model"
+	"fmt"
+	"net/http"
 	"reflect"
+	"time"
 )
 
-type argsAdd struct {
-	Type      int    `json:"type" binding:"required"`
-	Name      string `json:"name" binding:"required"`
-	TeacherId int    `json:"teacher_id" binding:"required"`
-	Bk        string `json:"bk" binding:"required"`
-	OpenTime  string `json:"open_time" binding:"required,time"`
-	StartTime string `json:"start_time" binding:"required,time"`
-	EndTime   string `json:"end_time" binding:"required,time"`
-	Class     string `json:"class"`
-}
-
 func handleAdd(c *core.Context) {
+	var (
+		args = c.Keys["args"].(*model.CourseInfo)
+		now  = time.Now().Format(cons.FORMAT_TIME)
+	)
 
+	args.CreateTime = now
+	args.UpdateTime = now
+
+	if err := core.GetDB().Table("course").Create(args).Error; err != nil {
+		c.JSON(http.StatusOK, cons.ERR_PUB_SYSTEM, fmt.Sprintf("新增课程出错,err:%v", err.Error()), nil)
+		return
+	}
+	c.JSON(http.StatusOK, 0, "", nil)
 }
 
 func init() {
@@ -27,7 +33,7 @@ func init() {
 		// 添加课程信息
 		"/dance/course/add",
 		core.HandleRequest(
-			reflect.TypeOf(argsAdd{}),
+			reflect.TypeOf(model.CourseInfo{}),
 			handleAdd, checks, finish,
 		),
 	)

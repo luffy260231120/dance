@@ -34,10 +34,10 @@ func handleLogin(c *core.Context) {
 	}
 
 	c.JSON(http.StatusOK, 0, "", gin.H{
-		"userId": user.UserId,
-		"token":  user.Token,
-		"name":   user.Name,
-		"sex":    user.Sex,
+		"user_id": user.UserId,
+		"token":   user.Token,
+		"name":    user.Name,
+		"sex":     user.Sex,
 	})
 }
 
