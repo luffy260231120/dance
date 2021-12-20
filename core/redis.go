@@ -2,32 +2,25 @@ package core
 
 import (
 	"dance/conf"
-	"time"
-
-	//"commercial/conf"
-	//"commercial/cons"
-	//"strings"
-	//"time"
 	"github.com/go-redis/redis"
-	"strings"
 )
 
-var redisDB *redis.ClusterClient
+var redisDB *redis.Client
 
 func InitRedis() {
-	redisDB = redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs:        strings.Split(conf.Config.Redis, ","),
-		DialTimeout:  time.Millisecond * 100,
-		ReadTimeout:  time.Millisecond * 300,
-		WriteTimeout: time.Millisecond * 300,
-		Password:     conf.Config.RedisPassword,
-	})
-	_, err := redisDB.Ping().Result()
+	redis_opt := redis.Options{
+		Addr:     conf.Config.Redis,
+		Password: conf.Config.RedisPassword,
+	}
+	// 创建连接池
+	redisDB = redis.NewClient(&redis_opt)
+	// 判断是否能够链接到数据库
+	err := redisDB.Ping().Err()
 	if err != nil {
 		panic(err)
 	}
 }
 
-func GetRedis() *redis.ClusterClient {
+func GetRedis() *redis.Client {
 	return redisDB
 }

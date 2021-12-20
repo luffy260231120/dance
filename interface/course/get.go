@@ -46,15 +46,13 @@ func handleGet(c *core.Context) {
 		args    = c.Keys["args"].(*argsGet)
 		cTab    = core.GetDB().Table("course")
 		courses = []*respGet{}
-
-		day   = time.Now().AddDate(0, 0, args.Offset)
-		start = time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.Local)
+		day     = time.Now().AddDate(0, 0, args.Offset).Format(cons.FORMAT_DATE)
 	)
 
 	// 1 获取当天所有课程 + 老师信息
-	err := cTab.Select("teacher.name,teacher.sex, teacher.avatar, course.id, course.type,course.title,course.max_number,course.bk,course.open_time,course.start_time,course.end_time,course.class").
+	err := cTab.Select("teacher.name,teacher.sex, teacher.avatar, course.id, course.type,course.title,course.max_number,course.bk,course.open_time,course.start_time,course.class").
 		Joins("left join teacher on course.teacher_id = teacher.teacher_id").
-		Where("start_time >= ? and start_time <= ?", start, start.AddDate(0, 0, 1)).
+		Where("course.date = ?", day).
 		Limit(args.Size).Offset(args.Size * (args.Page - 1)).Order("start_time").Find(&courses).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -69,12 +67,13 @@ func handleGet(c *core.Context) {
 	// 2 获取预约人数 判断status
 	for _, course := range courses {
 		key := fmt.Sprintf(cons.CacheKeyBookUserIds, course.ID)
-		userIds := core.GetRedis().ZRange(key, 1, -1).Val()
+		userIds := core.GetRedis().ZRange(key, 0, -1).Val()
 		course.Number = len(userIds)
 
 		// status
 		openTime, _ := time.ParseInLocation(cons.FORMAT_TIME, course.OpenTime, time.Local)
-		if openTime.After(time.Now()) {
+		startTime, _ := time.ParseInLocation(cons.FORMAT_TIME, course.StartTime, time.Local)
+		if time.Now().Before(openTime) || time.Now().After(startTime) {
 			course.Status = CantBook
 			continue
 		}

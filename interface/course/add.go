@@ -13,11 +13,12 @@ import (
 func handleAdd(c *core.Context) {
 	var (
 		args = c.Keys["args"].(*model.CourseInfo)
-		now  = time.Now().Format(cons.FORMAT_TIME)
+		now  = time.Now()
 	)
 
-	args.CreateTime = now
-	args.UpdateTime = now
+	args.CreateTime = now.Format(cons.FORMAT_TIME)
+	args.UpdateTime = now.Format(cons.FORMAT_TIME)
+	args.Date = now.Format(cons.FORMAT_DATE)
 
 	if err := core.GetDB().Table("course").Create(args).Error; err != nil {
 		c.JSON(http.StatusOK, cons.ERR_PUB_SYSTEM, fmt.Sprintf("新增课程出错,err:%v", err.Error()), nil)

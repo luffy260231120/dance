@@ -25,8 +25,8 @@ func handleLogin(c *core.Context) {
 	)
 
 	if err := core.GetDB().Table("user").Where("user_id=?", args.Phone).First(user).Error; err != nil {
+		c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "登录失败", nil)
 		if gorm.IsRecordNotFoundError(err) {
-			c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "登录失败", nil)
 			return
 		}
 		conf.MainLog.Errorf("登录未知错误,err:%v", err.Error())

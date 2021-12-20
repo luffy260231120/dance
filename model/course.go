@@ -10,6 +10,7 @@ type CourseInfo struct {
 	OpenTime  string `gorm:"column:open_time" json:"open_time" binding:"required,time"`
 	StartTime string `gorm:"column:start_time" json:"start_time" binding:"required,time"`
 	EndTime   string `gorm:"column:end_time" json:"end_time" binding:"required,time"`
+	Date      string `gorm:"column:date" json:"date"`
 	Class     string `gorm:"column:class" json:"class"`
 
 	CreateTime string `gorm:"column:create_time" json:"-"`

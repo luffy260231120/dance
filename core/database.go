@@ -88,7 +88,7 @@ func InitDB() {
 		logrus.WithFields(logrus.Fields{"signature": "sqlmonitor"}),
 		logger.Config{
 			SlowThreshold:             10 * time.Millisecond,
-			LogLevel:                  logger.Warn,
+			LogLevel:                  logger.Info,
 			IgnoreRecordNotFoundError: true,
 			Colorful:                  false,
 		},
