@@ -26,7 +26,7 @@ func handleRegister(c *core.Context) {
 	)
 	user := model.UserInfo{
 		UserId: args.Phone,
-		Token:  "", // TODO
+		Token:  "123", // TODO
 		Name:   args.Name,
 		Sex:    args.Sex,
 		Bk:     args.Bk,

@@ -15,28 +15,25 @@ import (
 
 type argsBook struct {
 	model.UserAuth
-	Status    BookStatus `json:"status" binding:"required"`
-	CourseId  int        `json:"course_id" binding:"required"`
-	MaxNumber int        `json:"max_number" binding:"required"` // TODO 最大人数这里应该做一个预约池，以后需要优化
-	StartTime string     `json:"start_time" binding:"required"`
+	CourseId  int `json:"course_id" binding:"required"`
+	MaxNumber int `json:"max_number" binding:"required"` // TODO 最大人数这里应该做一个预约池，以后需要优化
 }
 
 func handleBook(c *core.Context) {
 	var (
-		args          = c.Keys["args"].(*argsBook)
-		key           = fmt.Sprintf(cons.CacheKeyBookUserIds, args.CourseId)
-		userIds       = core.GetRedis().ZRange(key, 0, -1).Val()
-		number        = len(userIds)
-		startTimeT, _ = time.ParseInLocation(cons.FORMAT_TIME, args.StartTime, time.Local)
+		args    = c.Keys["args"].(*argsBook)
+		key     = fmt.Sprintf(cons.CacheKeyBookUserIds, args.CourseId)
+		userIds = core.GetRedis().ZRange(key, 0, -1).Val()
+		number  = len(userIds)
 	)
 
 	if collection.Collect(userIds).Contains(args.UserID) {
-		c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "重复预约", nil)
+		c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "已预约 请刷新", nil)
 		return
 	}
 
 	err := core.GetRedis().ZAdd(key, redis.Z{
-		Score:  float64(startTimeT.Unix() - time.Now().Unix()),
+		Score:  float64(time.Now().Unix()),
 		Member: args.UserID,
 	}).Err()
 	if err != nil {
@@ -46,7 +43,7 @@ func handleBook(c *core.Context) {
 	}
 
 	if number >= args.MaxNumber {
-		c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "无法预约 开始排队", nil)
+		c.JSON(http.StatusOK, cons.ERR_PUB_PARAMS, "开始排队", nil)
 		return
 	}
 

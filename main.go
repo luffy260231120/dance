@@ -12,7 +12,9 @@ import (
 )
 
 func main() {
-	conf.InitArgs()
+	if err := conf.InitArgs(); err != nil {
+		return
+	}
 	conf.InitConfig()
 	conf.InitLog()
 
